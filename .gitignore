@@ -7,6 +7,11 @@
 .buildlog/
 .history
 
+# macOS shit
+.DS_Store
+
+# IDEA
+.idea
 
 
 # Flutter repo-specific
