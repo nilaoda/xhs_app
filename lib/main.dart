@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:xhs_app/models/parse_result.dart';
 import 'package:xhs_app/service/parser_service.dart';
+import 'package:xhs_app/utils/common_util.dart';
 import 'package:xhs_app/widgets/download_progress_dialog.dart';
 import 'package:xhs_app/widgets/parse_result_widget.dart';
 
@@ -88,10 +89,11 @@ class ParserAppState extends State<ParserApp> {
       final tempDir = await getTemporaryDirectory();
       if (!mounted) return;
 
+      final title = CommonUtil.getAvailableFileName(_result!.title.isEmpty ? _result!.desc : _result!.title) + '_${DateTime.now().millisecondsSinceEpoch}';
       if (singleImageUrl != null) {
         // 下载单张图片
         final filePath =
-            '${tempDir.path}/image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+            '${tempDir.path}/$title.png';
 
         await showDownloadProgressDialog(
           context: context,
@@ -106,7 +108,7 @@ class ParserAppState extends State<ParserApp> {
         // 下载视频
         final videoUrl = _result!.video!.url;
         final filePath =
-            '${tempDir.path}/video_${DateTime.now().millisecondsSinceEpoch}.mp4';
+            '${tempDir.path}/$title.mp4';
 
         await showDownloadProgressDialog(
           context: context,
@@ -122,7 +124,7 @@ class ParserAppState extends State<ParserApp> {
         // 下载所有图片，使用统一的进度对话框
         final imageUrls = _result!.images!.map((img) => img.pngUrl).toList();
         final filePaths = imageUrls.map((url) =>
-            '${tempDir.path}/image_${DateTime.now().millisecondsSinceEpoch}_${imageUrls.indexOf(url)}.jpg').toList();
+            '${tempDir.path}/${title}_${imageUrls.indexOf(url)}.png').toList();
 
         await showBatchDownloadProgressDialog(
           context: context,

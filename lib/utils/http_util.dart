@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'dart:io';
 
+import 'package:xhs_app/utils/common_util.dart';
+
 class HttpUtil {
   static final Dio _dio = Dio(
     BaseOptions(connectTimeout: Duration(seconds: 8)),
@@ -94,7 +96,7 @@ class HttpUtil {
                       final bytesDiff = received - lastBytes;
                       final speedBytesPerSec =
                           (bytesDiff / (timeDiffMs / 1000));
-                      speed = _formatSpeed(speedBytesPerSec);
+                      speed = CommonUtil.formatSpeed(speedBytesPerSec);
 
                       // 更新基准值
                       lastUpdateTime = currentTime;
@@ -127,17 +129,6 @@ class HttpUtil {
       } else {
         throw Exception('下载失败: $e');
       }
-    }
-  }
-
-  // 格式化速度显示
-  static String _formatSpeed(double bytesPerSec) {
-    if (bytesPerSec < 1024) {
-      return '${bytesPerSec.toStringAsFixed(1)} B/s';
-    } else if (bytesPerSec < 1024 * 1024) {
-      return '${(bytesPerSec / 1024).toStringAsFixed(1)} KB/s';
-    } else {
-      return '${(bytesPerSec / (1024 * 1024)).toStringAsFixed(1)} MB/s';
     }
   }
 }

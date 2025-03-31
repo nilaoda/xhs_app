@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:xhs_app/models/parse_result.dart';
 import 'package:photo_view/photo_view.dart';
+import 'package:xhs_app/utils/common_util.dart';
 
 class ParseResultWidget extends StatelessWidget {
   final ParseResult result;
@@ -75,7 +76,7 @@ class ParseResultWidget extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: Text(
-            "时长: ${_formatDuration(video.duration)}，大小: ${_formatSize(video.size)}",
+            "时长: ${CommonUtil.formatDuration(video.duration)}，大小: ${CommonUtil.formatSize(video.size.toDouble())}",
           ),
         ),
       ],
@@ -197,15 +198,5 @@ class ParseResultWidget extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatDuration(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return "$minutes:${secs.toString().padLeft(2, '0')}";
-  }
-
-  String _formatSize(int bytes) {
-    return "${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB";
   }
 }
