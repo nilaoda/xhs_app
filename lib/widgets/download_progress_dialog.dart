@@ -3,6 +3,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
 import 'package:flutter_image_gallery_saver/flutter_image_gallery_saver.dart';
+import 'package:xhs_app/service/file_downloader.dart';
 import 'package:xhs_app/utils/http_util.dart';
 
 Future<void> showDownloadProgressDialog({
@@ -73,7 +74,7 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
 
   Future<void> _startDownload() async {
     try {
-      final file = await HttpUtil.downloadFile(
+      final file = await FileDownloader.downloadFileConcurrently(
         url: widget.url,
         savePath: widget.savePath,
         onProgress: (prog, spd) {
@@ -177,7 +178,7 @@ class _BatchDownloadProgressDialogState
     try {
       List<File> downloadedFiles = [];
       for (int i = 0; i < widget.urls.length; i++) {
-        final file = await HttpUtil.downloadFile(
+        final file = await FileDownloader.downloadFileConcurrently(
           url: widget.urls[i],
           savePath: widget.savePaths[i],
           onProgress: (prog, spd) {
