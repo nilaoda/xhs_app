@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter_image_gallery_saver/flutter_image_gallery_saver.dart';
 import 'package:xhs_app/service/file_downloader.dart';
 import 'package:xhs_app/utils/http_util.dart';
@@ -264,13 +265,24 @@ Future<void> saveToGallery(File tempFile, {required bool isVideo}) async {
     /// 读取系统权限
     if (Platform.isIOS) {
       myPermission = await Permission.photosAddOnly.request();
-    } else {
-      myPermission = await Permission.storage.request();
+    } else if (Platform.isAndroid) {
+      final deviceInfoPlugin = DeviceInfoPlugin();
+      final info = await deviceInfoPlugin.androidInfo;
+      if ((info.version.sdkInt) >= 33) {
+        myPermission = await Permission.manageExternalStorage.request();
+      } else {
+        myPermission = await Permission.storage.request();
+      }
     }
-    if (myPermission != PermissionStatus.granted) {
-      return false;
-    } else {
-      return true;
+    switch (myPermission) {
+      case PermissionStatus.granted:
+      case PermissionStatus.limited:
+        return true;
+      case PermissionStatus.denied:
+      case PermissionStatus.restricted:
+      case PermissionStatus.permanentlyDenied:
+      case PermissionStatus.provisional:
+        return false;
     }
   }
 

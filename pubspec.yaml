@@ -44,6 +44,7 @@ dependencies:
   dio: ^5.8.0+1
   permission_handler: ^11.4.0
   flutter_image_gallery_saver: ^0.0.2
+  device_info_plus: ^11.3.3
 
 dev_dependencies:
   flutter_test:

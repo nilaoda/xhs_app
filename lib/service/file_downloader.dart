@@ -26,7 +26,8 @@ class FileDownloader {
       final fileSizeResponse = await _dio.head(url);
       final acceptRanges = fileSizeResponse.headers.value(HttpHeaders.acceptRangesHeader);
       if (acceptRanges == null || !acceptRanges.contains('bytes')) {
-        throw Exception('服务器不支持分块下载');
+        print('服务器不支持分块下载');
+        return _downloadFile(url: url, savePath: savePath, onProgress: onProgress);
       }
 
       final totalSize = int.parse(
