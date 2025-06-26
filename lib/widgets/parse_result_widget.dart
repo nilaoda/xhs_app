@@ -23,7 +23,7 @@ class ParseResultWidget extends StatelessWidget {
         // 顶部固定区域
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Text(
+          child: SelectableText(
             result.title,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
@@ -33,7 +33,7 @@ class ParseResultWidget extends StatelessWidget {
           child: SizedBox(
             height: 60, // 描述 3 行高度
             child: SingleChildScrollView(
-              child: Text(result.desc, style: TextStyle(fontSize: 14)),
+              child: SelectableText(result.desc, style: TextStyle(fontSize: 14)),
             ),
           ),
         ),
