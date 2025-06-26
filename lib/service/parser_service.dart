@@ -101,11 +101,18 @@ class ParserService {
     if (!scriptRegex.hasMatch(html)) {
       throw ArgumentError('解析失败');
     }
-    final script = scriptRegex.firstMatch(html)!.group(1)!;
-    final result = flutterJs.evaluate("JSON.stringify($script)");
-    // print(result);
+    final script = scriptRegex.firstMatch(html)!.group(1)!.replaceAll(':undefined', ':null');
+    // print(script);
+    final jsCode = '''
+      (function () {
+        const obj = $script;
+        return JSON.stringify(obj);
+      })()
+    ''';
+    final result = flutterJs.evaluate(jsCode);
     final json = jsonDecode(result.stringResult);
-    final noteInfo = json['note']['noteDetailMap'][linkId]['note'];
+    final currentNoteId = json['note']['currentNoteId'];
+    final noteInfo = json['note']['noteDetailMap'][currentNoteId]['note'];
     final noteId = noteInfo['noteId'];
     final title = noteInfo['title'];
     final desc = noteInfo['desc'];

@@ -209,7 +209,7 @@ class ParserAppState extends State<ParserApp> {
       children: [
         // 上方输入框
         Expanded(
-          flex: 5,
+          flex: 6,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -241,7 +241,7 @@ class ParserAppState extends State<ParserApp> {
 
         // 下方结果展示
         Expanded(
-          flex: 15,
+          flex: 13,
           child:
               _isLoading
                   ? Center(child: CircularProgressIndicator())
