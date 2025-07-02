@@ -13,7 +13,7 @@ class ParserService {
   static final RegExp shareRegex = RegExp(
     r'https?:\/\/www\.xiaohongshu\.com/discovery/item/\S+',
   );
-  static final RegExp shortRegex = RegExp(r'https?:\/\/xhslink\.com\/[^，]+');
+  static final RegExp shortRegex = RegExp(r'https?:\/\/xhslink\.com\/[\/\w]+');
   static final RegExp scriptRegex = RegExp(
     r'<script>window.__INITIAL_STATE__=(.*?)<\/script>',
   );
