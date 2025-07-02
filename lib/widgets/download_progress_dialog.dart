@@ -297,11 +297,12 @@ Future<void> saveToGallery(File tempFile, {required bool isVideo}) async {
   // 使用 flutter_image_gallery_saver 保存文件到相册
   try {
     await FlutterImageGallerySaver.saveFile(tempFile.path);
+  } catch (e) {
+    throw Exception('保存到相册失败: $e');
+  } finally {
     // 删除临时文件
     if (await tempFile.exists()) {
       await tempFile.delete();
     }
-  } catch (e) {
-    throw Exception('保存到相册失败: $e');
   }
 }

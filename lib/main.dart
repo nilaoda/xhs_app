@@ -1,7 +1,11 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:xhs_app/models/parse_result.dart';
 import 'package:xhs_app/service/parser_service.dart';
 import 'package:xhs_app/utils/common_util.dart';
@@ -51,6 +55,8 @@ class ParserAppState extends State<ParserApp> {
   final ParserService _parserService = ParserService();
   ParseResult? _result; // 存储解析结果
   bool _isLoading = false;
+  
+  bool get isDesktop => !kIsWeb && (Platform.isMacOS || Platform.isWindows || Platform.isLinux);
 
   @override
   void dispose() {
@@ -86,21 +92,38 @@ class ParserAppState extends State<ParserApp> {
     if (_result == null) return;
 
     try {
-      final tempDir = await getTemporaryDirectory();
+      String downloadDir;
+      // 判断是否是桌面端（macOS / Windows）
+      if (isDesktop) {
+        final selectedDir = await FilePicker.platform.getDirectoryPath(
+          dialogTitle: '请选择下载保存目录',
+          initialDirectory: (await getDownloadsDirectory())?.path,
+        );
+
+        if (selectedDir == null) return; // 用户取消了选择
+        downloadDir = selectedDir;
+      } else {
+        // 安卓/iOS 使用临时目录
+        final tempDir = await getTemporaryDirectory();
+        downloadDir = tempDir.path;
+      }
+
       if (!mounted) return;
 
       final title = CommonUtil.getAvailableFileName(_result!.title.isEmpty ? _result!.desc : _result!.title) + '_${DateTime.now().millisecondsSinceEpoch}';
       if (singleImageUrl != null) {
         // 下载单张图片
         final filePath =
-            '${tempDir.path}/$title.png';
+            '$downloadDir/$title.png';
 
         await showDownloadProgressDialog(
           context: context,
           url: singleImageUrl,
           savePath: filePath,
           onComplete: (file) async {
-            await saveToGallery(file, isVideo: false);
+            if (!isDesktop) {
+              await saveToGallery(file, isVideo: false);
+            }
             _showSnackBar(context, '图片下载完成');
           },
         );
@@ -108,7 +131,7 @@ class ParserAppState extends State<ParserApp> {
         // 下载视频
         final videoUrl = _result!.video!.url;
         final filePath =
-            '${tempDir.path}/$title.mp4';
+            '$downloadDir/$title.mp4';
 
         await showDownloadProgressDialog(
           context: context,
@@ -116,7 +139,9 @@ class ParserAppState extends State<ParserApp> {
           savePath: filePath,
           onComplete: (file) async {
             print(file);
-            await saveToGallery(file, isVideo: true);
+            if (!isDesktop) {
+              await saveToGallery(file, isVideo: true);
+            }
             _showSnackBar(context, '视频下载完成');
           },
         );
@@ -124,15 +149,17 @@ class ParserAppState extends State<ParserApp> {
         // 下载所有图片，使用统一的进度对话框
         final imageUrls = _result!.images!.map((img) => img.pngUrl).toList();
         final filePaths = imageUrls.map((url) =>
-            '${tempDir.path}/${title}_${imageUrls.indexOf(url)}.png').toList();
+            '$downloadDir/${title}_${imageUrls.indexOf(url)}.png').toList();
 
         await showBatchDownloadProgressDialog(
           context: context,
           urls: imageUrls,
           savePaths: filePaths,
           onComplete: (files) async {
-            for (var file in files) {
-              await saveToGallery(file, isVideo: false);
+            if (!isDesktop){
+              for (var file in files) {
+                await saveToGallery(file, isVideo: false);
+              }
             }
             _showSnackBar(context, "${files.length} 张图片下载完成");
           },
