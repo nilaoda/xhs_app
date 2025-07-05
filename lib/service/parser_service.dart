@@ -59,11 +59,13 @@ class ParserService {
     if (noteInfo['imageList'] is! List) {
       return null;
     }
+    // http2可能导致HTTP/2 stream 1 was not closed cleanly
     return (noteInfo['imageList'] as List)
         .map(
           (image) => XhsImageInfo(
             url: image['urlDefault'],
-            pngUrl: "https://ci.xiaohongshu.com/${_extractImageToken(image['urlDefault'])}?imageView2/format/$imageFormat",
+            rawUrl: "http://sns-na-i6.xhscdn.com/${_extractImageToken(image['urlDefault'])}",
+            highQualityUrl: "http://ci.xiaohongshu.com/${_extractImageToken(image['urlDefault'])}?imageView2/format/$imageFormat",
             width: image['width'],
             height: image['height'],
             livePhoto: image['livePhoto'],
@@ -116,11 +118,17 @@ class ParserService {
 
     final parseResult = ParseResult(noteId: noteId, title: title, desc: desc);
     parseResult.images = _extractImages(noteInfo, imageFormat);
+    // await _parseImagesFromApp(noteId);
 
     if (type == 'video') {
       parseResult.video = await _extractVideo(noteInfo);
     }
 
     return parseResult;
+  }
+
+  Future<List<XhsImageInfo>> _parseImagesFromApp(String noteId) async {
+    
+    return [];
   }
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:xhs_app/models/chunk.dart';
+import 'package:xhs_app/models/parse_result.dart';
 import 'package:xhs_app/utils/common_util.dart';
 
 class FileDownloader {
@@ -17,6 +18,7 @@ class FileDownloader {
   // 获取图片文件扩展名
   static Future<String> _getImageExtension(String url) async {
     try {
+      print(url);
       final response = await http.get(Uri.parse(url));
       final server = response.headers['server'];
       // server: tencent-cos才代表能获取到真实的content-type
@@ -33,6 +35,8 @@ class FileDownloader {
           return '.png';
         case 'image/heif':
           return '.heic';
+        case 'image/webp':
+          return '.webp';
         default:
           return '.png'; // 默认回退
       }
@@ -40,6 +44,19 @@ class FileDownloader {
       print('获取图片扩展名失败: $e');
       return '.png'; // 出错时回退到 png
     }
+  }
+
+  static Future<File> downloadImage({
+    required XhsImageInfo image,
+    required String savePath,
+    Function(double progress, String speed)? onProgress,
+    CancelToken? cancelToken,
+    int concurrency = 4,
+  }) async {
+    // 图片需要获取真实的后缀
+    final extension = await _getImageExtension(image.highQualityUrl);
+    final toDownloadUrl = image.highQualityUrl.endsWith('raw') ? image.rawUrl : image.highQualityUrl;
+    return _downloadFile(url: toDownloadUrl, savePath: savePath + extension, onProgress: onProgress);
   }
 
   static Future<File> downloadFileConcurrently({
@@ -51,15 +68,6 @@ class FileDownloader {
   }) async {
     var tempFilePaths = [];
     try {
-      // TODO: 待优化
-      if (url.contains('imageView2/')) {
-        // 图片需要获取真实的后缀
-        // 另外http2可能导致HTTP/2 stream 1 was not closed cleanly
-        final httpUrl = url.replaceAll('https://', 'http://'); 
-        final extension = await _getImageExtension(httpUrl);
-        return _downloadFile(url: httpUrl, savePath: savePath + extension, onProgress: onProgress);
-      }
-
       // 检查服务器是否支持分块下载
       final fileSizeResponse = await _dio.head(url);
       final acceptRanges = fileSizeResponse.headers.value(HttpHeaders.acceptRangesHeader);

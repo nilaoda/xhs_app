@@ -92,8 +92,8 @@ class ParseResultWidget extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 5),
           child: GestureDetector(
-            onTap: () => _showFullScreenImage(context, img.url, img.pngUrl),
-            onLongPress: () => _showImageMenu(context, img.pngUrl),
+            onTap: () => _showFullScreenImage(context, img.url, img.highQualityUrl),
+            onLongPress: () => _showImageMenu(context, img.highQualityUrl),
             child: Column(
               children: [
                 Expanded(

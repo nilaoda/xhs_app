@@ -32,9 +32,12 @@ class HttpUtil {
   }
 
   /// 获取网页内容
-  static Future<String> getHtml(String url) async {
+  static Future<String> getHtml(String url, {Map<String, dynamic>? headers}) async {
     try {
-      final response = await _dio.get(url);
+      final response = await _dio.get(
+        url,
+        options: Options(headers: headers),
+      );
       if (response.statusCode == 200) {
         return response.data;
       } else {

@@ -8,7 +8,7 @@ class ImageFormat {
   const ImageFormat({required this.label, required this.code});
 
   // 定义支持的图片格式
-  static const ImageFormat original = ImageFormat(label: '原始', code: 'raw');
+  static const ImageFormat original = ImageFormat(label: '源文件', code: 'raw');
   static const ImageFormat jpg = ImageFormat(label: 'JPG', code: 'jpg');
   static const ImageFormat png = ImageFormat(label: 'PNG', code: 'png');
 

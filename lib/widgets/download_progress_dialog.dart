@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:xhs_app/models/parse_result.dart';
 import 'package:xhs_app/service/file_downloader.dart';
 import 'package:xhs_app/utils/http_util.dart';
 
@@ -29,7 +30,7 @@ Future<void> showDownloadProgressDialog({
 // 新增批量下载的对话框函数
 Future<void> showBatchDownloadProgressDialog({
   required BuildContext context,
-  required List<String> urls,
+  required List<XhsImageInfo> images,
   required List<String> savePaths,
   required Future<void> Function(List<File> files) onComplete,
 }) async {
@@ -38,7 +39,7 @@ Future<void> showBatchDownloadProgressDialog({
     barrierDismissible: false,
     builder: (BuildContext dialogContext) {
       return _BatchDownloadProgressDialog(
-        urls: urls,
+        images: images,
         savePaths: savePaths,
         onComplete: onComplete,
       );
@@ -146,12 +147,12 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
 
 // 新增批量下载的对话框类
 class _BatchDownloadProgressDialog extends StatefulWidget {
-  final List<String> urls;
+  final List<XhsImageInfo> images;
   final List<String> savePaths;
   final Future<void> Function(List<File> files) onComplete;
 
   const _BatchDownloadProgressDialog({
-    required this.urls,
+    required this.images,
     required this.savePaths,
     required this.onComplete,
   });
@@ -178,14 +179,14 @@ class _BatchDownloadProgressDialogState
   Future<void> _startBatchDownload() async {
     try {
       List<File> downloadedFiles = [];
-      for (int i = 0; i < widget.urls.length; i++) {
-        final file = await FileDownloader.downloadFileConcurrently(
-          url: widget.urls[i],
+      for (int i = 0; i < widget.images.length; i++) {
+        final file = await FileDownloader.downloadImage(
+          image: widget.images[i],
           savePath: widget.savePaths[i],
           onProgress: (prog, spd) {
             if (mounted) {
               setState(() {
-                progress = (completedCount + prog) / widget.urls.length;
+                progress = (completedCount + prog) / widget.images.length;
                 speed = spd;
               });
             }
@@ -195,7 +196,7 @@ class _BatchDownloadProgressDialogState
         if (mounted) {
           setState(() {
             completedCount++;
-            progress = completedCount / widget.urls.length;
+            progress = completedCount / widget.images.length;
           });
         }
       }
@@ -240,7 +241,7 @@ class _BatchDownloadProgressDialogState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${(progress * 100).toStringAsFixed(1)}% ($completedCount/${widget.urls.length})',
+                '${(progress * 100).toStringAsFixed(1)}% ($completedCount/${widget.images.length})',
               ),
               Text(speed),
             ],

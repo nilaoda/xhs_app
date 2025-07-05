@@ -38,14 +38,16 @@ class XhsVideoInfo {
 
 class XhsImageInfo {
   final String url;
-  final String pngUrl;
+  final String highQualityUrl;
+  final String rawUrl;
   final int width;
   final int height;
   final bool livePhoto;
 
   XhsImageInfo({
     required this.url,
-    required this.pngUrl,
+    required this.highQualityUrl,
+    required this.rawUrl,
     required this.width,
     required this.height,
     required this.livePhoto,
@@ -53,6 +55,6 @@ class XhsImageInfo {
 
   @override
   String toString() {
-    return "url: $url, pngUrl: $pngUrl, width: $width, height: $height, livePhoto: $livePhoto";
+    return "url: $url, highQualityUrl: $highQualityUrl, rawUrl: $rawUrl, width: $width, height: $height, livePhoto: $livePhoto";
   }
 }

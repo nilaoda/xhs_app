@@ -125,7 +125,7 @@ class ParserAppState extends State<ParserApp> {
       textToCopy = _result!.video!.url;
     } else if (_result!.images != null && _result!.images!.isNotEmpty) {
       // 图片数组，复制所有图片，一行一个
-      textToCopy = _result!.images!.map((img) => img.pngUrl).join("\n");
+      textToCopy = _result!.images!.map((img) => img.highQualityUrl.endsWith('raw') ? img.rawUrl : img.highQualityUrl).join("\n");
     }
 
     if (textToCopy.isEmpty) {
@@ -167,23 +167,7 @@ class ParserAppState extends State<ParserApp> {
       final title = CommonUtil.getAvailableFileName(_result!.title.isEmpty ? _result!.desc : _result!.title) + '_${DateTime.now().millisecondsSinceEpoch}';
       final settings = Provider.of<SettingsProvider>(context, listen: false);
       final selectedFormat = settings.imageFormat.code;
-      if (singleImageUrl != null) {
-        // 下载单张图片
-        final filePath =
-            '$downloadDir/$title';
-
-        await showDownloadProgressDialog(
-          context: context,
-          url: singleImageUrl,
-          savePath: filePath,
-          onComplete: (file) async {
-            if (!isDesktop) {
-              await saveToGallery(file, isVideo: false);
-            }
-            _showSnackBar(context, '图片下载完成');
-          },
-        );
-      } else if (_result!.video != null) {
+      if (_result!.video != null) {
         // 下载视频
         final videoUrl = _result!.video!.url;
         final filePath =
@@ -202,14 +186,17 @@ class ParserAppState extends State<ParserApp> {
           },
         );
       } else if (_result!.images != null && _result!.images!.isNotEmpty) {
-        // 下载所有图片，使用统一的进度对话框
-        final imageUrls = _result!.images!.map((img) => img.pngUrl).toList();
-        final filePaths = imageUrls.map((url) =>
-            '$downloadDir/${title}_${imageUrls.indexOf(url)}').toList();
+        // 下载图片，使用统一的进度对话框
+        final images = _result!.images!.toList();
+        if (singleImageUrl != null) {
+          images.removeWhere((element) => element.highQualityUrl != singleImageUrl);
+        }
+        final filePaths = images.map((ele) =>
+            '$downloadDir/${title}_${images.indexOf(ele)}').toList();
 
         await showBatchDownloadProgressDialog(
           context: context,
-          urls: imageUrls,
+          images: images,
           savePaths: filePaths,
           onComplete: (files) async {
             if (!isDesktop){

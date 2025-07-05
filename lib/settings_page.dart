@@ -58,7 +58,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ListTile(
                 title: Text('应用版本'),
-                subtitle: Text('20250705'),
+                subtitle: Text('20250705 v2'),
               ),
             ],
           ),
