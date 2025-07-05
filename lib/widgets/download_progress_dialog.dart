@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:flutter_image_gallery_saver/flutter_image_gallery_saver.dart';
 import 'package:xhs_app/service/file_downloader.dart';
 import 'package:xhs_app/utils/http_util.dart';
 
@@ -294,9 +294,13 @@ Future<void> saveToGallery(File tempFile, {required bool isVideo}) async {
     );
   }
 
-  // 使用 flutter_image_gallery_saver 保存文件到相册
+  // 保存文件到相册
   try {
-    await FlutterImageGallerySaver.saveFile(tempFile.path);
+    if (isVideo) {
+    await Gal.putVideo(tempFile.path);
+    } else {
+      await Gal.putImage(tempFile.path);
+    }
   } catch (e) {
     throw Exception('保存到相册失败: $e');
   } finally {

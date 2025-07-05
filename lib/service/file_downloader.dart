@@ -18,9 +18,9 @@ class FileDownloader {
   static Future<String> _getImageExtension(String url) async {
     try {
       final response = await http.get(Uri.parse(url));
-      // 有 X-Info: real data 才代表能获取到真实的content-type
-      if (!response.headers.containsKey("x-info")) {
-        print('没有找到X-Info响应头，继续获取...');
+      final server = response.headers['server'];
+      // server: tencent-cos才代表能获取到真实的content-type
+      if (!server!.startsWith('tencent')) {
         await Future.delayed(Duration(milliseconds: 300));
         return await _getImageExtension(url);
       }

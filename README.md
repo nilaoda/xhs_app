@@ -14,7 +14,7 @@ flutter devices
 flutter run --release -d 00008140-001A00560A0B001C
 
 打包iOS
-flutter build ios --release --no-codesign && mkdir -p build/app/Payload && cp -r "build/ios/iphoneos/Runner.app" build/app/Payload && cd build/app && zip -r -m MyApp.ipa Payload && cd .. && open app && cd ..
+flutter build ios --release --no-codesign && mkdir -p build/app/Payload && cp -r "build/ios/iphoneos/Runner.app" build/app/Payload && cd build/app && ditto -c -k --sequesterRsrc --keepParent Payload MyApp.ipa && cd .. && open app && cd ..
 
 打包Android
 flutter build apk --release --split-per-abi
