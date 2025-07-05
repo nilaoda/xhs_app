@@ -22,12 +22,30 @@ class _SettingsPageState extends State<SettingsPage> {
                 '主题设置',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
-              SwitchListTile(
-                title: Text('深色模式'),
-                value: settings.themeMode == ThemeMode.dark,
-                onChanged: (value) {
-                  settings.setThemeMode(value ? ThemeMode.dark : ThemeMode.light);
-                },
+              ListTile(
+                title: const Text('主题模式'),
+                trailing: DropdownButton<ThemeMode>(
+                  value: settings.themeMode,
+                  items: const [
+                    DropdownMenuItem(
+                      value: ThemeMode.system,
+                      child: Text('跟随系统'),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.light,
+                      child: Text('浅色模式'),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.dark,
+                      child: Text('深色模式'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      settings.setThemeMode(value);
+                    }
+                  },
+                ),
               ),
               SizedBox(height: 20),
               Text(
@@ -35,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               ListTile(
-                title: Text('高清图片格式'),
+                title: Text('下载图片格式'),
                 trailing: DropdownButton<ImageFormat>(
                   value: settings.imageFormat,
                   items: ImageFormat.values
