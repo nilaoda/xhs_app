@@ -1,12 +1,46 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:xhs_app/models/chunk.dart';
 import 'package:xhs_app/utils/common_util.dart';
 
 class FileDownloader {
-  static final _dio = Dio();
+  static final _dio = Dio()
+    ..options.headers['User-Agent'] =
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36'
+    ..options.connectTimeout = Duration(seconds: 30) // 连接超时
+    ..options.receiveTimeout = Duration(seconds: 60); // 接收超时
   static final updateIntervalMs = 500; // 更新间隔设为 500ms，避免过于频繁更新
+
+
+  // 获取图片文件扩展名
+  static Future<String> _getImageExtension(String url) async {
+    try {
+      final response = await http.get(Uri.parse(url));
+      // 有 X-Info: real data 才代表能获取到真实的content-type
+      if (!response.headers.containsKey("x-info")) {
+        print('没有找到X-Info响应头，继续获取...');
+        await Future.delayed(Duration(milliseconds: 300));
+        return await _getImageExtension(url);
+      }
+      final contentType = response.headers['content-type'];
+      if (contentType == null) return 'png'; // 默认回退到 png
+      switch (contentType) {
+        case 'image/jpeg':
+          return '.jpg';
+        case 'image/png':
+          return '.png';
+        case 'image/heif':
+          return '.heic';
+        default:
+          return '.png'; // 默认回退
+      }
+    } catch (e) {
+      print('获取图片扩展名失败: $e');
+      return '.png'; // 出错时回退到 png
+    }
+  }
 
   static Future<File> downloadFileConcurrently({
     required String url,
@@ -19,7 +53,11 @@ class FileDownloader {
     try {
       // TODO: 待优化
       if (url.contains('imageView2/')) {
-        return _downloadFile(url: url, savePath: savePath, onProgress: onProgress);
+        // 图片需要获取真实的后缀
+        // 另外http2可能导致HTTP/2 stream 1 was not closed cleanly
+        final httpUrl = url.replaceAll('https://', 'http://'); 
+        final extension = await _getImageExtension(httpUrl);
+        return _downloadFile(url: httpUrl, savePath: savePath + extension, onProgress: onProgress);
       }
 
       // 检查服务器是否支持分块下载
@@ -230,7 +268,7 @@ class FileDownloader {
       }
     } catch (e) {
       if (e is DioException) {
-        throw Exception('网络请求失败: ${e.message}');
+        throw Exception('网络请求失败: ${e.error}');
       } else {
         throw Exception('下载失败: $e');
       }

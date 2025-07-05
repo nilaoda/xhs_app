@@ -55,11 +55,7 @@ class ParserService {
     return token.split("!").first;
   }
 
-  String _buildImageUrl(String token) {
-    return "https://ci.xiaohongshu.com/$token?imageView2/format/png";
-  }
-
-  List<XhsImageInfo>? _extractImages(dynamic noteInfo) {
+  List<XhsImageInfo>? _extractImages(dynamic noteInfo, String imageFormat) {
     if (noteInfo['imageList'] is! List) {
       return null;
     }
@@ -67,7 +63,7 @@ class ParserService {
         .map(
           (image) => XhsImageInfo(
             url: image['urlDefault'],
-            pngUrl: _buildImageUrl(_extractImageToken(image['urlDefault'])),
+            pngUrl: "https://ci.xiaohongshu.com/${_extractImageToken(image['urlDefault'])}?imageView2/format/$imageFormat",
             width: image['width'],
             height: image['height'],
             livePhoto: image['livePhoto'],
@@ -90,7 +86,7 @@ class ParserService {
 
   //////////////////////////////////////////////////
 
-  Future<ParseResult> parse(String input) async {
+  Future<ParseResult> parse(String input, {required String imageFormat}) async {
     final url = await _getUrl(input);
     print(url);
     if (url.isEmpty) {
@@ -102,7 +98,6 @@ class ParserService {
       throw ArgumentError('解析失败');
     }
     final script = scriptRegex.firstMatch(html)!.group(1)!.replaceAll(':undefined', ':null');
-    // print(script);
     final jsCode = '''
       (function () {
         const obj = $script;
@@ -110,6 +105,7 @@ class ParserService {
       })()
     ''';
     final result = flutterJs.evaluate(jsCode);
+    // print(result);
     final json = jsonDecode(result.stringResult);
     final currentNoteId = json['note']['currentNoteId'];
     final noteInfo = json['note']['noteDetailMap'][currentNoteId]['note'];
@@ -119,7 +115,7 @@ class ParserService {
     final type = noteInfo['type']; // normal: 图文 video: 视频
 
     final parseResult = ParseResult(noteId: noteId, title: title, desc: desc);
-    parseResult.images = _extractImages(noteInfo);
+    parseResult.images = _extractImages(noteInfo, imageFormat);
 
     if (type == 'video') {
       parseResult.video = await _extractVideo(noteInfo);

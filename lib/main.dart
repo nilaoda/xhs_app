@@ -6,14 +6,22 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:xhs_app/models/parse_result.dart';
 import 'package:xhs_app/service/parser_service.dart';
+import 'package:xhs_app/settings_page.dart';
+import 'package:xhs_app/settings_provider.dart';
 import 'package:xhs_app/utils/common_util.dart';
 import 'package:xhs_app/widgets/download_progress_dialog.dart';
 import 'package:xhs_app/widgets/parse_result_widget.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => SettingsProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -21,23 +29,69 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      localizationsDelegates: [
-        GlobalMaterialLocalizations.delegate, // Material 组件的本地化
-        GlobalWidgetsLocalizations.delegate, // Widgets 的本地化
-        GlobalCupertinoLocalizations.delegate, // Cupertino 组件的本地化
-      ],
-      // 使用默认浅色主题
-      theme: ThemeData.light(),
-      // 使用默认深色主题
-      darkTheme: ThemeData.dark(),
-      themeMode: ThemeMode.system,
-      home: Scaffold(
-        appBar: AppBar(title: Text('✨小红书搬运工')),
-        // 添加这个属性防止键盘遮挡
-        resizeToAvoidBottomInset: true,
-        // SafeArea避免底部遮挡
-        body: SafeArea(child: ParserApp()),
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return MaterialApp(
+          localizationsDelegates: [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: ThemeData.light(),
+          darkTheme: ThemeData.dark(),
+          themeMode: settings.themeMode,
+          home: HomePage(),
+        );
+      },
+    );
+  }
+}
+
+// 主页面，包含底部导航栏
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+
+  // 页面列表
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      ParserApp(),
+      SettingsPage(),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('✨xhs_app✨')),
+      body: SafeArea(child: _pages[_currentIndex]),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '主页',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: '设置',
+          ),
+        ],
       ),
     );
   }
@@ -111,10 +165,12 @@ class ParserAppState extends State<ParserApp> {
       if (!mounted) return;
 
       final title = CommonUtil.getAvailableFileName(_result!.title.isEmpty ? _result!.desc : _result!.title) + '_${DateTime.now().millisecondsSinceEpoch}';
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      final selectedFormat = settings.imageFormat.code;
       if (singleImageUrl != null) {
         // 下载单张图片
         final filePath =
-            '$downloadDir/$title.png';
+            '$downloadDir/$title';
 
         await showDownloadProgressDialog(
           context: context,
@@ -149,7 +205,7 @@ class ParserAppState extends State<ParserApp> {
         // 下载所有图片，使用统一的进度对话框
         final imageUrls = _result!.images!.map((img) => img.pngUrl).toList();
         final filePaths = imageUrls.map((url) =>
-            '$downloadDir/${title}_${imageUrls.indexOf(url)}.png').toList();
+            '$downloadDir/${title}_${imageUrls.indexOf(url)}').toList();
 
         await showBatchDownloadProgressDialog(
           context: context,
@@ -183,7 +239,12 @@ class ParserAppState extends State<ParserApp> {
       _result = null; // 清除旧结果
     });
     try {
-      final parseResult = await _parserService.parse(_inputController.text);
+      // 获取设置
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      final parseResult = await _parserService.parse(
+        _inputController.text,
+        imageFormat: settings.imageFormat.code, // 使用 code 传递给解析服务
+      );
       if (!mounted) return;
       setState(() {
         _result = parseResult;
